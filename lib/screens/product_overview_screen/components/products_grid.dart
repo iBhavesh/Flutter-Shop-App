@@ -9,7 +9,6 @@ class ProductsGrid extends StatelessWidget {
     Key key,
   }) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<Products>(context);
@@ -22,10 +21,13 @@ class ProductsGrid extends StatelessWidget {
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
-      itemBuilder: (_, index) => ProductItem(
-        imageUrl: products[index].imageUrl,
-        title: products[index].title,
-        id: products[index].id,
+      itemBuilder: (_, index) => ChangeNotifierProvider(
+        create: (_) => products[index],
+        child: ProductItem(
+          // imageUrl: products[index].imageUrl,
+          // title: products[index].title,
+          // id: products[index].id,
+        ),
       ),
       itemCount: products.length,
     );
