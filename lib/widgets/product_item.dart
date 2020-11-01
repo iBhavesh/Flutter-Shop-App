@@ -5,16 +5,12 @@ import '../screens/product_detail_screen/product_detail_screen.dart';
 import '../providers/product.dart';
 
 class ProductItem extends StatelessWidget {
-  // final String title, imageUrl, id;
-
-  // ProductItem({
-  //   @required this.imageUrl,
-  //   @required this.title,
-  //   @required this.id,
-  // });
   @override
   Widget build(BuildContext context) {
-    final product = Provider.of<Product>(context);
+    final product = Provider.of<Product>(
+      context,
+      listen: false,
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
@@ -32,8 +28,10 @@ class ProductItem extends StatelessWidget {
         ),
         footer: GridTileBar(
           leading: IconButton(
-            icon: Icon(
-              product.isFavourite ? Icons.favorite : Icons.favorite_border,
+            icon: Consumer<Product>(
+              builder: (ctx, product, _x) => Icon(
+                product.isFavourite ? Icons.favorite : Icons.favorite_border,
+              ),
             ),
             onPressed: product.toggleFavouriteStatus,
             color: Theme.of(context).accentColor,
