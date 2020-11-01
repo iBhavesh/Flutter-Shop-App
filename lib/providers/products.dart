@@ -1,6 +1,9 @@
-import '../models/product.dart';
+import 'package:flutter/material.dart';
 
-final dummyProducts = [
+import './product.dart';
+
+class Products with ChangeNotifier {
+  List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -33,4 +36,21 @@ final dummyProducts = [
       imageUrl:
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     ),
-  ];
+  ] ;
+
+  List<Product> get items {
+    return [..._items];
+  }
+  
+  List<Product> get favouriteItems {
+    return _items.where((element) => element.isFavourite).toList();
+  }
+
+  Product findById(String id) {
+    return _items.firstWhere((element) => element.id == id);
+  }
+
+  void addProduct(){
+    notifyListeners();
+  }
+}

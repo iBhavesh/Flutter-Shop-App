@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../data/dummy_data.dart';
-import '../../widgets/product_item.dart';
+import 'components/products_grid.dart';
 
-class ProductOverviewScreen extends StatelessWidget {
+enum FilterOptions {
+  Favourites,
+  All,
+}
+
+class ProductOverviewScreen extends StatefulWidget {
+  @override
+  _ProductOverviewScreenState createState() => _ProductOverviewScreenState();
+}
+
+class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
+  var _showFavouritesOnly = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,22 +21,28 @@ class ProductOverviewScreen extends StatelessWidget {
         title: Text(
           'Shop',
         ),
+        actions: [
+          PopupMenuButton(
+            onSelected: (FilterOptions value) {
+              setState(() {
+                if (value == FilterOptions.Favourites) {
+                  _showFavouritesOnly = true;
+                } else {
+                  _showFavouritesOnly = false;
+                }
+              });
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                  child: Text('Only Favourites'),
+                  value: FilterOptions.Favourites),
+              PopupMenuItem(child: Text('Show All'), value: FilterOptions.All),
+            ],
+            icon: Icon(Icons.more_vert),
+          ),
+        ],
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(10),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 3 / 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        itemBuilder: (_, index) => ProductItem(
-          imageUrl: dummyProducts[index].imageUrl,
-          title: dummyProducts[index].title,
-          id: dummyProducts[index].id,
-        ),
-        itemCount: dummyProducts.length,
-      ),
+      body: ProductsGrid(_showFavouritesOnly),
     );
   }
 }
