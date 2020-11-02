@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../screens/product_detail_screen/product_detail_screen.dart';
+import '../helpers.dart' show showSnackBar;
 import '../providers/product.dart';
 import '../providers/cart.dart';
 
@@ -12,7 +13,7 @@ class ProductItem extends StatelessWidget {
       context,
       listen: false,
     );
-    final cart = Provider.of<Cart>(context, listen: false);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
@@ -43,15 +44,35 @@ class ProductItem extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           backgroundColor: Colors.black87,
-          trailing: IconButton(
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () {
-              cart.addItem(product.id, product.title, product.price);
-            },
-            color: Theme.of(context).accentColor,
+          trailing: Consumer<Cart>(
+            builder: (_, cart, ch) =>
+                buildCartIconButton(cart, product, context),
           ),
         ),
       ),
+    );
+  }
+
+  IconButton buildCartIconButton(
+      Cart cart, Product product, BuildContext context) {
+    if (cart.isItemInCart(product.id)) {
+      return IconButton(
+        icon: Icon(Icons.shopping_cart),
+        onPressed: () {
+          showSnackBar(
+              context, 'Item already exists in cart! Change quantity there!');
+        },
+        color: Theme.of(context).accentColor,
+      );
+    }
+
+    return IconButton(
+      icon: Icon(Icons.shopping_cart_outlined),
+      onPressed: () {
+        cart.addItem(product.id, product.title, product.price);
+        showSnackBar(context, 'Item added!');
+      },
+      color: Theme.of(context).accentColor,
     );
   }
 }

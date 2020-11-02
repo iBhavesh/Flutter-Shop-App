@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../providers/cart.dart';
+import '.././../../helpers.dart';
 
 class CartItem extends StatelessWidget {
   final String id, title;
@@ -16,6 +17,17 @@ class CartItem extends StatelessWidget {
     @required this.title,
     @required this.id,
   });
+
+  void decreaseQuantity(BuildContext context) {
+    if (quantity > 1) {
+      Provider.of<Cart>(context, listen: false).decreaseQuantity(productId);
+    } else {
+      Provider.of<Cart>(context, listen: false).removeItem(productId);
+      showSnackBar(context, 'You could also swipe left to delete the product',
+          duration: 3, textScaleFactor: 1.2);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -25,7 +37,7 @@ class CartItem extends StatelessWidget {
         child: Icon(
           Icons.delete,
           color: Colors.white,
-          size: 40,
+          size: 30,
         ),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20),
@@ -36,7 +48,7 @@ class CartItem extends StatelessWidget {
       ),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        Provider.of<Cart>(context,listen:false).removeItem(productId);
+        Provider.of<Cart>(context, listen: false).removeItem(productId);
       },
       child: Card(
         margin: const EdgeInsets.symmetric(
@@ -54,8 +66,30 @@ class CartItem extends StatelessWidget {
               ),
             ),
             title: Text(title),
-            subtitle: Text('Total: \u20B9${(price * quantity)}'),
-            trailing: Text('$quantity x'),
+            subtitle:
+                Text('Total: \u20B9${(price * quantity).toStringAsFixed(2)}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.remove_circle,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  onPressed: () => decreaseQuantity(context),
+                ),
+                Text('$quantity x'),
+                IconButton(
+                    icon: Icon(
+                      Icons.add_circle,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    onPressed: () {
+                      Provider.of<Cart>(context, listen: false)
+                          .addItem(productId, title, price);
+                    }),
+              ],
+            ),
           ),
         ),
       ),
