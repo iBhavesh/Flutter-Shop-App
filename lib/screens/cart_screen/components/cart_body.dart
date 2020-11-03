@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import './cart_item.dart';
 import '../../../providers/cart.dart' show Cart;
+import '../../../providers/orders.dart';
+import '../../../helpers.dart';
 
 class CartBody extends StatelessWidget {
   const CartBody({
@@ -39,9 +41,14 @@ class CartBody extends StatelessWidget {
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
                 FlatButton(
-                  onPressed: () {},
                   child: Text('ORDER NOW'),
                   textColor: Theme.of(context).primaryColor,
+                  onPressed: () {
+                    Provider.of<Orders>(context, listen: false)
+                        .addOrder(cart.items.values.toList(), cart.totalAmount);
+                        cart.clearCart();
+                        showSnackBar(context, 'Order Placed',duration: 2);
+                  },
                 ),
               ],
             ),
@@ -51,6 +58,7 @@ class CartBody extends StatelessWidget {
         Expanded(
             child: ListView.builder(
           itemBuilder: (_, index) => CartItem(
+            ValueKey(cart.items.values.toList()[index].id),
             title: cart.items.values.toList()[index].title,
             id: cart.items.values.toList()[index].id,
             productId: cart.items.keys.toList()[index],

@@ -10,13 +10,13 @@ class CartItem extends StatelessWidget {
   final int quantity;
   final String productId;
 
-  CartItem({
+  CartItem(Key key,{
     @required this.quantity,
     @required this.productId,
     @required this.price,
     @required this.title,
     @required this.id,
-  });
+  }) : super(key: key);
 
   void decreaseQuantity(BuildContext context) {
     if (quantity > 1) {
