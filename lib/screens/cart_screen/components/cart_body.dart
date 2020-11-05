@@ -44,10 +44,15 @@ class CartBody extends StatelessWidget {
                   child: Text('ORDER NOW'),
                   textColor: Theme.of(context).primaryColor,
                   onPressed: () {
-                    Provider.of<Orders>(context, listen: false)
-                        .addOrder(cart.items.values.toList(), cart.totalAmount);
-                        cart.clearCart();
-                        showSnackBar(context, 'Order Placed',duration: 2);
+                    if (cart.items.isNotEmpty) {
+                      Provider.of<Orders>(context, listen: false).addOrder(
+                          cart.items.values.toList(), cart.totalAmount);
+                      cart.clearCart();
+                      showSnackBar(context, 'Order Placed', duration: 2);
+                    }
+                    showSnackBar(
+                        context, 'Cart is empty! order cannot be placed',
+                        duration: 2);
                   },
                 ),
               ],
