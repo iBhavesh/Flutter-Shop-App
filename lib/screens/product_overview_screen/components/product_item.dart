@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import '../screens/product_detail_screen/product_detail_screen.dart';
-import '../helpers.dart' show showSnackBar;
-import '../providers/product.dart';
-import '../providers/cart.dart';
+import '../../product_detail_screen/product_detail_screen.dart';
+import '../../../helpers.dart' show showSnackBar;
+import '../../../providers/product.dart';
+import '../../../providers/cart.dart';
 
 class ProductItem extends StatelessWidget {
   @override
