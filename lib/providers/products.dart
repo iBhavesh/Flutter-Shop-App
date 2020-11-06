@@ -56,7 +56,7 @@ class Products with ChangeNotifier {
       title: product.title,
       imageUrl: product.imageUrl,
       price: product.price,
-      id: 'p${(_items.length + 1).toString() }',
+      id: 'p${(_items.length + 1).toString()}',
     ));
     notifyListeners();
   }
@@ -67,6 +67,11 @@ class Products with ChangeNotifier {
     if (productIndex >= 0) {
       _items[productIndex] = product;
     }
+    notifyListeners();
+  }
+
+  void deleteProduct(String id) {
+    _items.removeWhere((element) => element.id == id);
     notifyListeners();
   }
 }
