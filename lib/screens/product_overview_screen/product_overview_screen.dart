@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'components/products_grid.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/cart_widget.dart';
+import '../../providers/products.dart';
+import '../../helpers.dart';
 
 enum FilterOptions {
   Favourites,
@@ -24,6 +27,25 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           'Shop',
         ),
         actions: [
+          Builder(builder: (BuildContext context) {
+            return IconButton(
+              icon: Icon(Icons.arrow_circle_up),
+              onPressed: () async {
+                try {
+                  await Provider.of<Products>(context, listen: false)
+                      .uploadData();
+                  debugPrint('test');
+                  showSnackBar(context, 'Upload Successful');
+                } catch (error) {
+                  showSnackBar(
+                    context,
+                    'Oops! Something went wrong!',
+                    duration: 2,
+                  );
+                }
+              },
+            );
+          }),
           CartWidget(),
           PopupMenuButton(
             onSelected: (FilterOptions value) {
@@ -50,5 +72,3 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
     );
   }
 }
-
-

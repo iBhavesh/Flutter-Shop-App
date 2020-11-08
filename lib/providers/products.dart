@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import './product.dart';
+
+const _firebase = 'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
 
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -50,15 +55,51 @@ class Products with ChangeNotifier {
     return _items.firstWhere((element) => element.id == id);
   }
 
-  void addProduct(Product product) {
-    _items.add(Product(
-      description: product.description,
-      title: product.title,
-      imageUrl: product.imageUrl,
-      price: product.price,
-      id: 'p${(_items.length + 1).toString()}',
-    ));
-    notifyListeners();
+  Future<void> addProduct(Product product) async {
+    try {
+      final response = await http.post(_firebase,
+          body: json.encode({
+            'title': product.title,
+            'description': product.description,
+            'price': product.price,
+            'isFavourite': product.isFavourite,
+            'imageUrl': product.imageUrl,
+          }));
+      _items.add(Product(
+        description: product.description,
+        title: product.title,
+        imageUrl: product.imageUrl,
+        price: product.price,
+        id: json.decode(response.body)['name'],
+      ));
+      notifyListeners();
+    } catch (error) {
+      debugPrint('$error');
+      throw error;
+    }
+  }
+
+  Future<void> uploadData() async {
+    try {
+      await Future.forEach(_items, (product) async {
+        // debugPrint('ForEach Start: ${DateTime.now().toString()}');
+        final response = await http.post(
+          _firebase,
+          body: json.encode({
+            'title': product.title,
+            'description': product.description,
+            'price': product.price,
+            'isFavourite': product.isFavourite,
+            'imageUrl': product.imageUrl,
+          }),
+        );
+        // debugPrint('${DateTime.now().toString()}');
+        debugPrint('${json.decode(response.body)}');
+      });
+    } catch (error) {
+      debugPrint(error.toString());
+      throw (error);
+    }
   }
 
   void updateProduct(Product product) {
