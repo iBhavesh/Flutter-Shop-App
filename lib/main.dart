@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import './routes.dart';
-import './screens/product_overview_screen/product_overview_screen.dart';
 import './providers/products.dart';
 import './providers/cart.dart';
 import './providers/orders.dart';
@@ -33,7 +32,6 @@ class MyApp extends StatelessWidget {
           accentColor: Colors.deepOrange[400],
           fontFamily: 'Lato',
         ),
-        home: ProductOverviewScreen(),
         routes: routes,
       ),
     );

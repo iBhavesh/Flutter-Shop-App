@@ -6,8 +6,47 @@ import '../../providers/products.dart';
 import './components/user_product_item.dart';
 import '../edit_product_screen/edit_product_screen.dart';
 
-class UserProductsScreen extends StatelessWidget {
+class UserProductsScreen extends StatefulWidget {
   static const routeName = '/user-products';
+
+  @override
+  _UserProductsScreenState createState() => _UserProductsScreenState();
+}
+
+class _UserProductsScreenState extends State<UserProductsScreen> {
+  var _isLoading = false;
+
+  Future<void> _deleteItem(String id) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await Provider.of<Products>(context, listen: false).deleteProduct(id);
+    } catch (error) {
+      await showDialog<Null>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Error'),
+          content: Text(
+            'Something went wrong!',
+          ),
+          actions: [
+            TextButton(
+              child: Text('Okay'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<Products>(context);
@@ -24,17 +63,26 @@ class UserProductsScreen extends StatelessWidget {
         ],
       ),
       drawer: AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          itemCount: productsData.items.length,
-          itemBuilder: (_, index) => UserProductItem(
-            id: productsData.items[index].id,
-            imageUrl: productsData.items[index].imageUrl,
-            title: productsData.items[index].title,
-          ),
-        ),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.builder(
+                  itemCount: productsData.items.length,
+                  itemBuilder: (_, index) => UserProductItem(
+                    deleteItem: _deleteItem,
+                    id: productsData.items[index].id,
+                    imageUrl: productsData.items[index].imageUrl,
+                    title: productsData.items[index].title,
+                  ),
+                ),
+              ),
+              onRefresh: () async {
+                await Provider.of<Products>(context, listen: false)
+                    .fetchAndSetProducts();
+              },
+            ),
     );
   }
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../../edit_product_screen/edit_product_screen.dart';
-import '../../../providers/products.dart';
 
 class UserProductItem extends StatelessWidget {
   final String imageUrl, title, id;
+  final Function deleteItem;
 
   UserProductItem({
+    @required this.deleteItem,
     @required this.id,
     @required this.imageUrl,
     @required this.title,
@@ -36,10 +36,7 @@ class UserProductItem extends StatelessWidget {
               IconButton(
                 icon: Icon(Icons.delete),
                 color: Colors.red,
-                onPressed: () {
-                  Provider.of<Products>(context, listen: false)
-                      .deleteProduct(id);
-                },
+                onPressed: () => deleteItem(id),
               ),
             ],
           ),

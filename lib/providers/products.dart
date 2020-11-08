@@ -5,43 +5,8 @@ import 'package:http/http.dart' as http;
 
 import './product.dart';
 
-const _firebase = 'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
-
 class Products with ChangeNotifier {
-  List<Product> _items = [
-    Product(
-      id: 'p1',
-      title: 'Red Shirt',
-      description: 'A red shirt - it is pretty red!',
-      price: 29.99,
-      imageUrl:
-          'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-    ),
-    Product(
-      id: 'p2',
-      title: 'Trousers',
-      description: 'A nice pair of trousers.',
-      price: 59.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-    ),
-    Product(
-      id: 'p3',
-      title: 'Yellow Scarf',
-      description: 'Warm and cozy - exactly what you need for the winter.',
-      price: 19.99,
-      imageUrl:
-          'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    ),
-    Product(
-      id: 'p4',
-      title: 'A Pan',
-      description: 'Prepare any meal you want.',
-      price: 49.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
-    ),
-  ];
+  List<Product> _items = [];
 
   List<Product> get items {
     return [..._items];
@@ -56,6 +21,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
+    const _firebase =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
     try {
       final response = await http.post(_firebase,
           body: json.encode({
@@ -78,7 +45,7 @@ class Products with ChangeNotifier {
       throw error;
     }
   }
-
+/*
   Future<void> uploadData() async {
     try {
       await Future.forEach(_items, (product) async {
@@ -101,18 +68,66 @@ class Products with ChangeNotifier {
       throw (error);
     }
   }
+  */
 
-  void updateProduct(Product product) {
+  Future<void> fetchAndSetProducts() async {
+    const _firebase =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
+    _items.clear();
+    try {
+      final response = await http.get(_firebase);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      extractedData.forEach((productId, productData) {
+        _items.add(Product(
+          description: productData['description'],
+          id: productId,
+          imageUrl: productData['imageUrl'],
+          price: productData['price'],
+          title: productData['title'],
+          isFavourite: productData['isFavourite'],
+        ));
+      });
+    } catch (error) {
+      debugPrint(error.toString());
+      throw (error);
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateProduct(Product product) async {
+    final _firebase =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products/${product.id}.json';
     final productIndex =
         _items.indexWhere((element) => element.id == product.id);
     if (productIndex >= 0) {
       _items[productIndex] = product;
     }
+    try {
+      await http.patch(_firebase,
+          body: json.encode({
+            'title': product.title,
+            'description': product.description,
+            'price': product.price,
+            'imageUrl': product.imageUrl,
+          }));
+    } catch (error) {
+      debugPrint(error.toString());
+      throw (error);
+    }
     notifyListeners();
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((element) => element.id == id);
+  Future<void> deleteProduct(String id) async {
+    final _firebase =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id';
+    try {
+      final response = await http.delete(_firebase);
+      if (response.statusCode == 200)
+        _items.removeWhere((element) => element.id == id);
+    } catch (error) {
+      debugPrint(error.toString());
+      throw (error);
+    }
     notifyListeners();
   }
 }
