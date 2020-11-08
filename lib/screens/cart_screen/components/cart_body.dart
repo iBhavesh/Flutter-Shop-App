@@ -43,16 +43,19 @@ class CartBody extends StatelessWidget {
                 FlatButton(
                   child: Text('ORDER NOW'),
                   textColor: Theme.of(context).primaryColor,
-                  onPressed: () {
-                    if (cart.items.isNotEmpty) {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                          cart.items.values.toList(), cart.totalAmount);
-                      cart.clearCart();
-                      showSnackBar(context, 'Order Placed', duration: 2);
-                    }
-                    showSnackBar(
-                        context, 'Cart is empty! order cannot be placed',
-                        duration: 2);
+                  onPressed: () async {
+                    try {
+                      if (cart.items.isNotEmpty) {
+                        await Provider.of<Orders>(context, listen: false)
+                            .addOrder(
+                                cart.items.values.toList(), cart.totalAmount);
+                        cart.clearCart();
+                        showSnackBar(context, 'Order Placed', duration: 2);
+                      } else
+                        showSnackBar(
+                            context, 'Cart is empty! order cannot be placed',
+                            duration: 2);
+                    } catch (error) {}
                   },
                 ),
               ],

@@ -28,7 +28,7 @@ class _UserProductsScreenState extends State<UserProductsScreen> {
         builder: (_) => AlertDialog(
           title: Text('Error'),
           content: Text(
-            'Something went wrong!',
+            error.toString(),
           ),
           actions: [
             TextButton(

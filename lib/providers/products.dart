@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../models/http_exception.dart';
 
 import './product.dart';
 
@@ -45,30 +46,6 @@ class Products with ChangeNotifier {
       throw error;
     }
   }
-/*
-  Future<void> uploadData() async {
-    try {
-      await Future.forEach(_items, (product) async {
-        // debugPrint('ForEach Start: ${DateTime.now().toString()}');
-        final response = await http.post(
-          _firebase,
-          body: json.encode({
-            'title': product.title,
-            'description': product.description,
-            'price': product.price,
-            'isFavourite': product.isFavourite,
-            'imageUrl': product.imageUrl,
-          }),
-        );
-        // debugPrint('${DateTime.now().toString()}');
-        debugPrint('${json.decode(response.body)}');
-      });
-    } catch (error) {
-      debugPrint(error.toString());
-      throw (error);
-    }
-  }
-  */
 
   Future<void> fetchAndSetProducts() async {
     const _firebase =
@@ -76,17 +53,20 @@ class Products with ChangeNotifier {
     _items.clear();
     try {
       final response = await http.get(_firebase);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      extractedData.forEach((productId, productData) {
-        _items.add(Product(
-          description: productData['description'],
-          id: productId,
-          imageUrl: productData['imageUrl'],
-          price: productData['price'],
-          title: productData['title'],
-          isFavourite: productData['isFavourite'],
-        ));
-      });
+      if (json.decode(response.body) != null) {
+        final extractedData =
+            json.decode(response.body) as Map<String, dynamic>;
+        extractedData.forEach((productId, productData) {
+          _items.add(Product(
+            description: productData['description'],
+            id: productId,
+            imageUrl: productData['imageUrl'],
+            price: productData['price'],
+            title: productData['title'],
+            isFavourite: productData['isFavourite'],
+          ));
+        });
+      }
     } catch (error) {
       debugPrint(error.toString());
       throw (error);
@@ -119,11 +99,13 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id';
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id.json';
     try {
       final response = await http.delete(_firebase);
       if (response.statusCode == 200)
         _items.removeWhere((element) => element.id == id);
+      else
+        throw HttpException('Could not delete product');
     } catch (error) {
       debugPrint(error.toString());
       throw (error);

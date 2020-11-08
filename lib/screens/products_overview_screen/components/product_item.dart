@@ -8,6 +8,16 @@ import '../../../providers/product.dart';
 import '../../../providers/cart.dart';
 
 class ProductItem extends StatelessWidget {
+  Future<void> toggleFavourite(BuildContext context) async {
+    try {
+      await Provider.of<Product>(context, listen: false)
+          .toggleFavouriteStatus();
+          showSnackBar(context, 'Success!' );
+    } catch (error) {
+      showSnackBar(context, error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(
@@ -34,11 +44,11 @@ class ProductItem extends StatelessWidget {
         footer: GridTileBar(
           leading: IconButton(
             icon: Consumer<Product>(
-              builder: (ctx, product, _x) => Icon(
+              builder: (ctx, product, _) => Icon(
                 product.isFavourite ? Icons.favorite : Icons.favorite_border,
               ),
             ),
-            onPressed: product.toggleFavouriteStatus,
+            onPressed: () => toggleFavourite(context),
             color: Theme.of(context).accentColor,
           ),
           title: Text(
@@ -46,35 +56,65 @@ class ProductItem extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           backgroundColor: Colors.black87,
-          trailing: Consumer<Cart>(
-            builder: (_, cart, ch) =>
-                buildCartIconButton(cart, product, context),
-          ),
+          trailing: CartIconButton(product),
         ),
       ),
     );
   }
+}
 
-  IconButton buildCartIconButton(
-      Cart cart, Product product, BuildContext context) {
-    if (cart.isItemInCart(product.id)) {
+class CartIconButton extends StatefulWidget {
+  final Product product;
+
+  CartIconButton(this.product);
+
+  @override
+  _CartIconButtonState createState() => _CartIconButtonState();
+}
+
+class _CartIconButtonState extends State<CartIconButton> {
+  var _isLoading = false;
+
+  Future<void> addItemToCart(BuildContext context, ThemeData theme) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await Provider.of<Cart>(context, listen: false).addItem(
+          widget.product.id, widget.product.title, widget.product.price);
+      showSnackBar(context, 'Item added!');
+    } catch (error) {
+      showSnackBar(context, error.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = Provider.of<Cart>(context);
+    final theme = Theme.of(context);
+    if (cart.isItemInCart(widget.product.id)) {
       return IconButton(
         icon: Icon(Icons.shopping_cart),
         onPressed: () {
           showSnackBar(
               context, 'Item already exists in cart! Change quantity there!');
         },
-        color: Theme.of(context).accentColor,
+        color: theme.accentColor,
       );
     }
 
-    return IconButton(
-      icon: Icon(Icons.shopping_cart_outlined),
-      onPressed: () {
-        cart.addItem(product.id, product.title, product.price);
-        showSnackBar(context, 'Item added!');
-      },
-      color: Theme.of(context).accentColor,
-    );
+    return _isLoading
+        ? CircularProgressIndicator()
+        : IconButton(
+            icon: Icon(Icons.shopping_cart_outlined),
+            onPressed: () {
+              addItemToCart(context, theme);
+            },
+            color: theme.accentColor,
+          );
   }
 }
