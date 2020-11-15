@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/products.dart';
+import '../../providers/cart.dart';
 import 'components/products_grid.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/cart_widget.dart';
@@ -29,14 +30,14 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       });
       Provider.of<Products>(context, listen: false)
           .fetchAndSetProducts()
-          .catchError((error) {
+          .then((_) {
+        Provider.of<Cart>(context, listen: false).fetchAndSetCart();
+      }).catchError((error) {
         return showDialog<Null>(
           context: context,
           builder: (_) => AlertDialog(
             title: Text('Error'),
-            content: Text(
-              'Something went wrong!',
-            ),
+            content: Text(error.toString()),
             actions: [
               TextButton(
                 child: Text('Okay'),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -67,9 +68,14 @@ class Products with ChangeNotifier {
           ));
         });
       }
-    } catch (error) {
+    }
+    on SocketException  catch(error){
       debugPrint(error.toString());
-      throw (error);
+      throw HttpException('No Internet! Please check your network connection.');
+    }
+     catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('Products could not be loaded');
     }
     notifyListeners();
   }

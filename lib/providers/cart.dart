@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +26,8 @@ class Cart with ChangeNotifier {
 
   Future<void> addItem(String productId, String title, double price) async {
     if (_items.containsKey(productId)) {
-    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/${_items[productId].id}.json';
+      final url =
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/${_items[productId].id}.json';
       try {
         final response = await http.patch(
           url,
@@ -33,9 +35,9 @@ class Cart with ChangeNotifier {
             'quantity': _items[productId].quantity + 1,
           }),
         );
-        debugPrint('${response.statusCode}');
+        // debugPrint('${response.statusCode}');
         if (response.statusCode >= 400) {
-          throw HttpException('Item could not be added to Cart');
+          throw HttpException('Item could not be added to cart!');
         } else {
           _items.update(
             productId,
@@ -47,9 +49,10 @@ class Cart with ChangeNotifier {
             ),
           );
         }
+        notifyListeners();
       } catch (error) {
         debugPrint(error.toString());
-        throw (error);
+        throw HttpException('Item could not be added to cart!');
       }
     } else {
       final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
@@ -63,6 +66,7 @@ class Cart with ChangeNotifier {
             'quantity': 1
           }),
         );
+        // debugPrint('${response.statusCode}');
         if (response.statusCode == 200) {
           _items.putIfAbsent(
             productId,
@@ -74,12 +78,12 @@ class Cart with ChangeNotifier {
             ),
           );
         }
+        notifyListeners();
       } catch (error) {
         debugPrint(error.toString());
-        throw (error);
+        throw HttpException('Item could not be added!');
       }
     }
-    notifyListeners();
   }
 
   int get itemCount {
@@ -100,22 +104,54 @@ class Cart with ChangeNotifier {
     return total;
   }
 
-  void removeItem(String productId) {
-    _items.remove(productId);
+  Future<void> removeItem(String productId) async {
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/${_items[productId].id}.json';
+    try {
+      final response = await http.delete(url);
+      // debugPrint('${response.statusCode}');
+      if (response.statusCode >= 400) {
+        throw HttpException('Item could not be removed from Cart');
+      } else {
+        _items.remove(productId);
+      }
+    } catch (error) {
+      debugPrint(error.toString());
+      throw (error);
+    }
+
     notifyListeners();
   }
 
-  void decreaseQuantity(String productId) {
+  Future<void> decreaseQuantity(String productId) async {
     if (_items.containsKey(productId)) {
-      _items.update(
-        productId,
-        (value) => CartItem(
-          id: value.id,
-          price: value.price,
-          title: value.title,
-          quantity: value.quantity - 1,
-        ),
-      );
+      final url =
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/${_items[productId].id}.json';
+      try {
+        final response = await http.patch(
+          url,
+          body: json.encode({
+            'quantity': _items[productId].quantity - 1,
+          }),
+        );
+        // debugPrint('${response.statusCode}');
+        if (response.statusCode >= 400) {
+          throw HttpException('Item could not be removed from Cart');
+        } else {
+          _items.update(
+            productId,
+            (value) => CartItem(
+              id: value.id,
+              price: value.price,
+              title: value.title,
+              quantity: value.quantity - 1,
+            ),
+          );
+        }
+      } catch (error) {
+        debugPrint(error.toString());
+        throw (error);
+      }
     }
     notifyListeners();
   }
@@ -124,8 +160,47 @@ class Cart with ChangeNotifier {
     return _items.containsKey(productId);
   }
 
-  void clearCart() {
-    _items = {};
+  Future<void> clearCart() async {
+    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
+    try {
+      final response = await http.delete(url);
+      if (response.statusCode == 200)
+        _items = {};
+      else
+        throw HttpException('Could not clear cart');
+    } catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('Could not clear cart');
+    }
     notifyListeners();
+  }
+
+  Future<void> fetchAndSetCart() async {
+    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
+    try {
+      final response = await http.get(url);
+      _items.clear();
+      if (json.decode(response.body) != null) {
+        final extractedResponse =
+            json.decode(response.body) as Map<String, dynamic>;
+        extractedResponse.forEach((key, value) {
+          _items.putIfAbsent(
+              value['productId'],
+              () => CartItem(
+                    id: key,
+                    price: value['price'],
+                    title: value['title'],
+                    quantity: value['quantity'],
+                  ));
+        });
+        notifyListeners();
+      }
+    } on SocketException catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('No Internet! Please check your network connection.');
+    } catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('Cart Items could not be fetched');
+    }
   }
 }

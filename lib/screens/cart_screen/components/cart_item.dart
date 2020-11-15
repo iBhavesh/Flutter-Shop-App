@@ -10,23 +10,14 @@ class CartItem extends StatelessWidget {
   final int quantity;
   final String productId;
 
-  CartItem(Key key,{
+  CartItem(
+    Key key, {
     @required this.quantity,
     @required this.productId,
     @required this.price,
     @required this.title,
     @required this.id,
   }) : super(key: key);
-
-  void decreaseQuantity(BuildContext context) {
-    if (quantity > 1) {
-      Provider.of<Cart>(context, listen: false).decreaseQuantity(productId);
-    } else {
-      Provider.of<Cart>(context, listen: false).removeItem(productId);
-      showSnackBar(context, 'You could also swipe left to delete the product',
-          duration: 3, textScaleFactor: 1.2);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,28 +62,98 @@ class CartItem extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.remove_circle,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  onPressed: () => decreaseQuantity(context),
+                CustomIconButton(
+                  icon: Icons.remove_circle,
+                  productId: productId,
+                  title: title,
+                  price: price,
+                  quantity: quantity,
                 ),
                 Text('$quantity x'),
-                IconButton(
-                    icon: Icon(
-                      Icons.add_circle,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    onPressed: () {
-                      Provider.of<Cart>(context, listen: false)
-                          .addItem(productId, title, price);
-                    }),
+                CustomIconButton(
+                  icon: Icons.add_circle,
+                  productId: productId,
+                  title: title,
+                  price: price,
+                  quantity: quantity,
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class CustomIconButton extends StatefulWidget {
+  const CustomIconButton({
+    Key key,
+    @required this.icon,
+    @required this.productId,
+    @required this.title,
+    @required this.price,
+    @required this.quantity,
+  }) : super(key: key);
+
+  final IconData icon;
+  final int quantity;
+  final String productId;
+  final String title;
+  final double price;
+
+  @override
+  _CustomIconButtonState createState() => _CustomIconButtonState();
+}
+
+class _CustomIconButtonState extends State<CustomIconButton> {
+  var isLoading = false;
+
+  Future<void> decreaseQuantity(BuildContext context) async {
+    try {
+      if (widget.quantity > 1) {
+        await Provider.of<Cart>(context, listen: false)
+            .decreaseQuantity(widget.productId);
+      } else {
+        await Provider.of<Cart>(context, listen: false)
+            .removeItem(widget.productId);
+        showSnackBar(context, 'You could also swipe left to delete the product',
+            duration: 3, textScaleFactor: 1.2);
+      }
+    } catch (error) {
+      showSnackBar(context, error.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return isLoading
+        ? Container(
+            child: CircularProgressIndicator(),
+            padding: const EdgeInsets.all(8.0),
+          )
+        : IconButton(
+            icon: Icon(
+              widget.icon,
+              color: Theme.of(context).primaryColor,
+            ),
+            onPressed: () async {
+              try {
+                setState(() {
+                  isLoading = true;
+                });
+                if (widget.icon == Icons.add_circle)
+                  await Provider.of<Cart>(context, listen: false)
+                      .addItem(widget.productId, widget.title, widget.price);
+                else
+                  await decreaseQuantity(context);
+              } catch (error) {
+                showSnackBar(context, error.toString());
+              } finally {
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            });
   }
 }
