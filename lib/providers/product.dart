@@ -17,18 +17,18 @@ class Product with ChangeNotifier {
     @required this.title,
     this.isFavourite = false,
   });
-  Future<void> toggleFavouriteStatus() async {
-    final _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id.json';
+  Future<void> toggleFavouriteStatus(String authToken, String userId) async {
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/userFavourites/$userId/$id.json?auth=$authToken';
     try {
       isFavourite = !isFavourite;
       notifyListeners();
-      final response = await http.patch(
-        _firebase,
-        body: json.encode({'isFavourite': isFavourite}),
+      final response = await http.put(
+        url,
+        body: json.encode(isFavourite),
       );
-      if(response.statusCode >=400 )
-      throw HttpException('Favourite status could not be updated!');
+      if (response.statusCode >= 400)
+        throw HttpException('Favourite status could not be updated!');
     } catch (error) {
       debugPrint(error.toString());
       isFavourite = !isFavourite;

@@ -8,7 +8,9 @@ import '../models/http_exception.dart';
 import './product.dart';
 
 class Products with ChangeNotifier {
+  final String authToken, userId;
   List<Product> _items = [];
+  Products(this.authToken, this.userId, this._items);
 
   List<Product> get items {
     return [..._items];
@@ -23,8 +25,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    const _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
+    final _firebase =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json?auth=$authToken';
     try {
       final response = await http.post(_firebase,
           body: json.encode({
@@ -33,6 +35,7 @@ class Products with ChangeNotifier {
             'price': product.price,
             'isFavourite': product.isFavourite,
             'imageUrl': product.imageUrl,
+            'creatorId': userId,
           }));
       _items.add(Product(
         description: product.description,
@@ -42,21 +45,31 @@ class Products with ChangeNotifier {
         id: json.decode(response.body)['name'],
       ));
       notifyListeners();
+    } on SocketException catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('No Internet! Please check your network connection.');
     } catch (error) {
       debugPrint('$error');
       throw error;
     }
   }
 
-  Future<void> fetchAndSetProducts() async {
-    const _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json';
+  Future<void> fetchAndSetProducts({bool filterByUser = false}) async {
+    final queryParameters = filterByUser ? 'orderBy="creatorId"&equalTo="$userId"': '';
+    var url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products.json?auth=$authToken&$queryParameters';
     _items.clear();
     try {
-      final response = await http.get(_firebase);
-      if (json.decode(response.body) != null) {
-        final extractedData =
-            json.decode(response.body) as Map<String, dynamic>;
+      final response = await http.get(url);
+      final extractedData = json.decode(response.body);
+      if (extractedData['error'] != null) {
+        throw HttpException(extractedData['error']);
+      }
+      if (extractedData != null) {
+        url =
+            'https://flutter-shop-app-6ecaa.firebaseio.com/userFavourites/$userId.json?auth=$authToken';
+        final favourites = await http.get(url);
+        final extractedFav = json.decode(favourites.body);
         extractedData.forEach((productId, productData) {
           _items.add(Product(
             description: productData['description'],
@@ -64,16 +77,17 @@ class Products with ChangeNotifier {
             imageUrl: productData['imageUrl'],
             price: productData['price'],
             title: productData['title'],
-            isFavourite: productData['isFavourite'],
+            isFavourite:
+                extractedFav == null ? false : extractedFav[productId] ?? false,
           ));
         });
       }
-    }
-    on SocketException  catch(error){
+    } on SocketException catch (error) {
       debugPrint(error.toString());
       throw HttpException('No Internet! Please check your network connection.');
-    }
-     catch (error) {
+    } on HttpException catch (error) {
+      throw error;
+    } catch (error) {
       debugPrint(error.toString());
       throw HttpException('Products could not be loaded');
     }
@@ -81,21 +95,36 @@ class Products with ChangeNotifier {
   }
 
   Future<void> updateProduct(Product product) async {
-    final _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products/${product.id}.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products/${product.id}.json?auth=$authToken';
     final productIndex =
         _items.indexWhere((element) => element.id == product.id);
-    if (productIndex >= 0) {
-      _items[productIndex] = product;
-    }
     try {
-      await http.patch(_firebase,
+      if (!(productIndex >= 0)) {
+        return;
+      }
+      final response = await http.patch(url,
           body: json.encode({
             'title': product.title,
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
           }));
+
+      if (response.body.contains('not found'))
+        throw HttpException('item not found!');
+      final extractedData = json.decode(response.body);
+
+      if (extractedData['error'] != null) {
+        throw HttpException(extractedData['error']);
+      }
+
+      if (extractedData['title'] != null) _items[productIndex] = product;
+    } on SocketException catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('No Internet! Please check your network connection.');
+    } on HttpException catch (error) {
+      throw error;
     } catch (error) {
       debugPrint(error.toString());
       throw (error);
@@ -104,14 +133,19 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String id) async {
-    final _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/products/$id.json?auth=$authToken';
     try {
-      final response = await http.delete(_firebase);
+      final response = await http.delete(url);
       if (response.statusCode == 200)
         _items.removeWhere((element) => element.id == id);
       else
         throw HttpException('Could not delete product');
+    } on SocketException catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('No Internet! Please check your network connection.');
+    } on HttpException catch (error) {
+      throw error;
     } catch (error) {
       debugPrint(error.toString());
       throw (error);

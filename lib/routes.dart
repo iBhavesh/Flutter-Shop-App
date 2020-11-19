@@ -8,7 +8,7 @@ import './screens/user_products_screen/user_products_screen.dart';
 import './screens/edit_product_screen/edit_product_screen.dart';
 
 final Map<String, WidgetBuilder> routes = {
-  '/': (BuildContext _) => ProductsOverviewScreen() ,
+  ProductsOverviewScreen.routeName: (BuildContext _) => ProductsOverviewScreen() ,
   ProductDetailScreen.routeName: (BuildContext _) =>
       ProductDetailScreen(),
   CartScreen.routeName: (BuildContext _) => CartScreen(),

@@ -6,13 +6,14 @@ import '../../product_detail_screen/product_detail_screen.dart';
 import '../../../helpers.dart' show showSnackBar;
 import '../../../providers/product.dart';
 import '../../../providers/cart.dart';
+import '../../../providers/auth.dart';
 
 class ProductItem extends StatelessWidget {
-  Future<void> toggleFavourite(BuildContext context) async {
+  Future<void> toggleFavourite(BuildContext context, Auth auth) async {
     try {
       await Provider.of<Product>(context, listen: false)
-          .toggleFavouriteStatus();
-          showSnackBar(context, 'Success!' );
+          .toggleFavouriteStatus(auth.token,auth.userId);
+      showSnackBar(context, 'Success!');
     } catch (error) {
       showSnackBar(context, error.toString());
     }
@@ -24,6 +25,8 @@ class ProductItem extends StatelessWidget {
       context,
       listen: false,
     );
+
+    final auth = Provider.of<Auth>(context, listen: false);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -48,7 +51,7 @@ class ProductItem extends StatelessWidget {
                 product.isFavourite ? Icons.favorite : Icons.favorite_border,
               ),
             ),
-            onPressed: () => toggleFavourite(context),
+            onPressed: () => toggleFavourite(context, auth),
             color: Theme.of(context).accentColor,
           ),
           title: Text(

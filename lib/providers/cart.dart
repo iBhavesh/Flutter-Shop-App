@@ -18,7 +18,10 @@ class CartItem {
 }
 
 class Cart with ChangeNotifier {
+  final String authToken, userId;
   Map<String, CartItem> _items = {};
+
+  Cart(this.authToken, this.userId, this._items);
 
   Map<String, CartItem> get items {
     return {..._items};
@@ -27,7 +30,7 @@ class Cart with ChangeNotifier {
   Future<void> addItem(String productId, String title, double price) async {
     if (_items.containsKey(productId)) {
       final url =
-          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/${_items[productId].id}.json';
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId/${_items[productId].id}.json?auth=$authToken';
       try {
         final response = await http.patch(
           url,
@@ -50,12 +53,17 @@ class Cart with ChangeNotifier {
           );
         }
         notifyListeners();
+      } on SocketException catch (error) {
+        debugPrint(error.toString());
+        throw HttpException(
+            'No Internet! Please check your network connection.');
       } catch (error) {
         debugPrint(error.toString());
         throw HttpException('Item could not be added to cart!');
       }
     } else {
-      final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
+      final url =
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json?auth=$authToken';
       try {
         final response = await http.post(
           url,
@@ -79,6 +87,10 @@ class Cart with ChangeNotifier {
           );
         }
         notifyListeners();
+      } on SocketException catch (error) {
+        debugPrint(error.toString());
+        throw HttpException(
+            'No Internet! Please check your network connection.');
       } catch (error) {
         debugPrint(error.toString());
         throw HttpException('Item could not be added!');
@@ -106,7 +118,7 @@ class Cart with ChangeNotifier {
 
   Future<void> removeItem(String productId) async {
     final url =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/${_items[productId].id}.json';
+        'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId/${_items[productId].id}.json?auth=$authToken';
     try {
       final response = await http.delete(url);
       // debugPrint('${response.statusCode}');
@@ -126,7 +138,7 @@ class Cart with ChangeNotifier {
   Future<void> decreaseQuantity(String productId) async {
     if (_items.containsKey(productId)) {
       final url =
-          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/${_items[productId].id}.json';
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId/${_items[productId].id}.json?auth=$authToken';
       try {
         final response = await http.patch(
           url,
@@ -148,6 +160,10 @@ class Cart with ChangeNotifier {
             ),
           );
         }
+      } on SocketException catch (error) {
+        debugPrint(error.toString());
+        throw HttpException(
+            'No Internet! Please check your network connection.');
       } catch (error) {
         debugPrint(error.toString());
         throw (error);
@@ -161,7 +177,8 @@ class Cart with ChangeNotifier {
   }
 
   Future<void> clearCart() async {
-    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId.json?auth=$authToken';
     try {
       final response = await http.delete(url);
       if (response.statusCode == 200)
@@ -176,13 +193,17 @@ class Cart with ChangeNotifier {
   }
 
   Future<void> fetchAndSetCart() async {
-    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId.json?auth=$authToken';
     try {
       final response = await http.get(url);
       _items.clear();
-      if (json.decode(response.body) != null) {
-        final extractedResponse =
-            json.decode(response.body) as Map<String, dynamic>;
+      final extractedResponse = json.decode(response.body);
+      if (extractedResponse != null) {
+        if (extractedResponse['error'] != null) {
+          throw HttpException(
+              'Cart Items could not be fetched:${extractedResponse['error']}');
+        }
         extractedResponse.forEach((key, value) {
           _items.putIfAbsent(
               value['productId'],
@@ -198,6 +219,8 @@ class Cart with ChangeNotifier {
     } on SocketException catch (error) {
       debugPrint(error.toString());
       throw HttpException('No Internet! Please check your network connection.');
+    } on HttpException catch (error) {
+      throw error;
     } catch (error) {
       debugPrint(error.toString());
       throw HttpException('Cart Items could not be fetched');

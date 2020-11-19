@@ -102,7 +102,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           builder: (_) => AlertDialog(
             title: Text('Error'),
             content: Text(
-              'Something went wrong!',
+              error.toString()
             ),
             actions: [
               TextButton(

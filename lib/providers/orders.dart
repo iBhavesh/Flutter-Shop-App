@@ -22,6 +22,9 @@ class OrderItem {
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String authToken, userId;
+
+  Orders(this.authToken, this.userId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
@@ -38,7 +41,8 @@ class Orders with ChangeNotifier {
         'price': value.price,
       });
     });
-    final url = 'https://flutter-shop-app-6ecaa.firebaseio.com/orders.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/orders/$userId.json?auth=$authToken';
     debugPrint('$products');
     try {
       final response = await http.post(
@@ -64,6 +68,9 @@ class Orders with ChangeNotifier {
             ));
         notifyListeners();
       }
+    } on SocketException catch (error) {
+      debugPrint(error.toString());
+      throw HttpException('No Internet! Please check your network connection.');
     } catch (error) {
       debugPrint('$error');
       throw HttpException('Oops an error occured! Order Could not be placed.');
@@ -71,22 +78,24 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> fetchAndSetOrders() async {
-    const _firebase =
-        'https://flutter-shop-app-6ecaa.firebaseio.com/orders.json';
+    final url =
+        'https://flutter-shop-app-6ecaa.firebaseio.com/orders/$userId.json?auth=$authToken';
     _orders.clear();
     try {
-      final response = await http.get(_firebase);
-      if (json.decode(response.body) != null) {
-        final extractedData =
-            json.decode(response.body) as Map<String, dynamic>;
-        // debugPrint('${response.body}');
-        // debugPrint('$extractedData');
+      final response = await http.get(url);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData['error'] != null) {
+        throw HttpException(extractedData['error']);
+      }
+      if (extractedData != null) {
         extractedData.forEach((orderId, orderData) {
-          final products = (orderData['products'] as List).map((element) => {
-                'price': element['price'],
-                'productId': element['productId'],
-                'quantity': element['quantity'],
-              }).toList();
+          final products = (orderData['products'] as List)
+              .map((element) => {
+                    'price': element['price'],
+                    'productId': element['productId'],
+                    'quantity': element['quantity'],
+                  })
+              .toList();
           debugPrint('$products');
           debugPrint('after');
           _orders.insert(
@@ -102,6 +111,8 @@ class Orders with ChangeNotifier {
     } on SocketException catch (error) {
       debugPrint(error.toString());
       throw HttpException('No Internet! Please check your network connection.');
+    } on HttpException catch (error) {
+      throw error;
     } catch (error) {
       debugPrint(error.toString());
       throw HttpException('Orders could not be loaded');

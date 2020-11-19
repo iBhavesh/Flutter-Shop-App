@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../screens/orders_screen/orders_screen.dart';
 import '../screens/user_products_screen/user_products_screen.dart';
+import '../providers/auth.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -15,18 +17,35 @@ class AppDrawer extends StatelessWidget {
           ),
           DrawerItem(
             title: 'Shop',
-            routeName: '/',
             icon: Icons.shopping_cart,
+            handler: () {
+              Navigator.of(context).pushReplacementNamed('/');
+            },
           ),
           DrawerItem(
             title: 'Your Orders',
-            routeName: OrdersScreen.routeName,
             icon: Icons.payment,
+            handler: () {
+              Navigator.of(context)
+                  .pushReplacementNamed(OrdersScreen.routeName);
+            },
           ),
           DrawerItem(
             title: 'User Products',
-            routeName: UserProductsScreen.routeName,
             icon: Icons.edit,
+            handler: () {
+              Navigator.of(context)
+                  .pushReplacementNamed(UserProductsScreen.routeName);
+            },
+          ),
+          DrawerItem(
+            title: 'Logout',
+            icon: Icons.logout,
+            handler: () {
+              Navigator.of(context).pop();
+              Provider.of<Auth>(context, listen: false).logout();
+              Navigator.of(context).pushReplacementNamed('/');
+            },
           ),
         ],
       ),
@@ -35,13 +54,14 @@ class AppDrawer extends StatelessWidget {
 }
 
 class DrawerItem extends StatelessWidget {
-  final String routeName, title;
+  final String title;
   final IconData icon;
+  final Function handler;
 
   const DrawerItem({
     @required this.icon,
     @required this.title,
-    @required this.routeName,
+    @required this.handler,
     Key key,
   }) : super(key: key);
 
@@ -53,9 +73,7 @@ class DrawerItem extends StatelessWidget {
         ListTile(
           leading: Icon(icon),
           title: Text(title),
-          onTap: () {
-            Navigator.of(context).pushReplacementNamed(routeName);
-          },
+          onTap: handler,
         ),
         Divider(thickness: 0.5),
       ],

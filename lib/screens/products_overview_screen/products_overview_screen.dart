@@ -13,6 +13,7 @@ enum FilterOptions {
 }
 
 class ProductsOverviewScreen extends StatefulWidget {
+  static const routeName = '/products';
   @override
   _ProductsOverviewScreenState createState() => _ProductsOverviewScreenState();
 }
@@ -21,6 +22,24 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var _showFavouritesOnly = false;
   var _isInitialised = false;
   var _isLoading = false;
+
+  Future<void> _showDialog(String content) async {
+    return showDialog<Null>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Error'),
+        content: Text(content),
+        actions: [
+          TextButton(
+            child: Text('Okay'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void didChangeDependencies() {
@@ -31,23 +50,13 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       Provider.of<Products>(context, listen: false)
           .fetchAndSetProducts()
           .then((_) {
-        Provider.of<Cart>(context, listen: false).fetchAndSetCart();
+        return Provider.of<Cart>(context, listen: false)
+            .fetchAndSetCart()
+            .catchError((error) {
+          return _showDialog(error.toString());
+        });
       }).catchError((error) {
-        return showDialog<Null>(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text('Error'),
-            content: Text(error.toString()),
-            actions: [
-              TextButton(
-                child: Text('Okay'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        );
+        return _showDialog(error.toString());
       }).then((_) {
         setState(() {
           _isLoading = false;
@@ -64,7 +73,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Shop',
+          'My Shop',
         ),
         actions: [
           CartWidget(),
