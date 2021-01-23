@@ -111,15 +111,15 @@ class _AuthCardState extends State<AuthCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 1000),
     );
     _heightAnimation = Tween<Size>(
-      begin: Size(double.infinity, 260),
-      end: Size(double.infinity, 320),
+      begin: Size(double.infinity, 270),
+      end: Size(double.infinity, 330),
     ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
     );
-    _heightAnimation.addListener(() => setState(() {}));
+    // _heightAnimation.addListener(() => setState(() {}));
   }
 
   @override
@@ -191,12 +191,16 @@ class _AuthCardState extends State<AuthCard>
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: Container(
-        // height: _authMode == AuthMode.Signup ? 320 : 260,
-        height: _heightAnimation.value.height,
-        constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
-        width: mediaQuery.size.width * 0.75,
-        padding: const EdgeInsets.all(16.0),
+      child: AnimatedBuilder(
+        animation: _heightAnimation,
+        builder: (ctx, child) => Container(
+            // height: _authMode == AuthMode.Signup ? 320 : 260,
+            height: _heightAnimation.value.height,
+            constraints:
+                BoxConstraints(minHeight: _heightAnimation.value.height),
+            width: mediaQuery.size.width * 0.75,
+            padding: const EdgeInsets.all(16.0),
+            child: child),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -274,6 +278,7 @@ class _AuthCardState extends State<AuthCard>
                             _authMode == AuthMode.Signup ? 'SIGN UP' : 'LOGIN'),
                         onPressed: _submitForm,
                       ),
+                      SizedBox(height: 10),
                 FlatButton(
                   child: Text(
                       '${_authMode == AuthMode.Login ? 'SIGN UP' : 'LOGIN'} Instead'),
