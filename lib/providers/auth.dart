@@ -9,9 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/http_exception.dart';
 
 class Auth with ChangeNotifier {
-  String _token, _userId, _refreshToken;
+  String _token, _userId;
   DateTime _expiryDate;
-  Timer _refreshTimer;
+  Timer _autoLogoutTimer;
   bool get isAuth {
     return token != null;
   }
@@ -42,6 +42,7 @@ class Auth with ChangeNotifier {
       );
       final extractedResponse = json.decode(response.body);
       if (extractedResponse['error'] != null) {
+        debugPrint('$extractedResponse');
         if ((extractedResponse['error']['message'] as String)
             .contains('EMAIL_EXISTS')) {
           throw HttpException('This email address is already in use');
@@ -50,6 +51,9 @@ class Auth with ChangeNotifier {
           throw HttpException('Too many attempts! Try again later.');
         } else if ((extractedResponse['error']['message'] as String)
             .contains('EMAIL_NOT_FOUND')) {
+          throw HttpException('Inavlid email/password');
+        } else if ((extractedResponse['error']['message'] as String)
+            .contains('INVALID_PASSWORD')) {
           throw HttpException('Inavlid email/password');
         } else if ((extractedResponse['error']['message'] as String)
             .contains('USER_DISABLED')) {
@@ -62,11 +66,10 @@ class Auth with ChangeNotifier {
       }
       _token = extractedResponse['idToken'];
       _userId = extractedResponse['localId'];
-      _refreshToken = extractedResponse['refreshToken'];
-      debugPrint('$_refreshToken');
       _expiryDate = DateTime.now()
           .add(Duration(seconds: int.tryParse(extractedResponse['expiresIn'])));
       notifyListeners();
+      _autoLogout();
       final prefs = await SharedPreferences.getInstance();
       prefs.setString(
           'userData',
@@ -76,7 +79,6 @@ class Auth with ChangeNotifier {
             'token': _token,
             'email': email,
             'password': password,
-            'refreshToken': _refreshToken,
           }));
     } on SocketException catch (error) {
       debugPrint(error.toString());
@@ -85,7 +87,7 @@ class Auth with ChangeNotifier {
       throw error;
     } catch (error) {
       debugPrint('$error');
-      throw HttpException('Error Occured!');
+      throw HttpException('An Error Occured!');
     }
   }
 
@@ -101,9 +103,9 @@ class Auth with ChangeNotifier {
     _token = null;
     _expiryDate = null;
     _userId = null;
-    if (_refreshTimer != null) {
-      _refreshTimer.cancel();
-      _refreshTimer = null;
+    if (_autoLogoutTimer != null) {
+      _autoLogoutTimer.cancel();
+      _autoLogoutTimer = null;
     }
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
@@ -120,7 +122,14 @@ class Auth with ChangeNotifier {
     }
     _token = userData['token'];
     _userId = userData['userId'];
-    _refreshToken = userData['refreshToken'];
     notifyListeners();
+    _autoLogout();
+  }
+
+  void _autoLogout() {
+    if (_autoLogoutTimer != null) _autoLogoutTimer.cancel();
+    _autoLogoutTimer = Timer(
+        Duration(seconds: _expiryDate.difference(DateTime.now()).inSeconds),
+        logout);
   }
 }

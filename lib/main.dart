@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<Auth>(
         builder: (ctx, auth, child) {
           return MaterialApp(
-            title: 'Flutter Demo',
+            title: 'Shop App',
             theme: theme,
             home: auth.isAuth
                 ? ProductsOverviewScreen()
