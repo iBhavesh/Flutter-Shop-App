@@ -102,17 +102,49 @@ class _AuthCardState extends State<AuthCard>
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
+  AnimationController _animationController;
+  Animation<double> _opacityAnimation;
+  Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 300,
+      ),
+    );
+    _opacityAnimation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+    _slideAnimation =
+        Tween<Offset>(begin: Offset(0, -1.5), end: Offset(0, 0)).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+  }
 
   Future<void> _submitForm() async {
+    debugPrint("1");
+    debugPrint(_authMode.toString());
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
     setState(() {
       _isLoading = true;
     });
+    debugPrint("2");
     try {
+      debugPrint("3");
       if (_authMode == AuthMode.Login) {
+        debugPrint("4");
+    debugPrint("${_authData['email']},${_authData['password']}");
         await Provider.of<Auth>(context, listen: false)
             .login(_authData['email'], _authData['password']);
+        debugPrint("5");
       } else {
         await Provider.of<Auth>(context, listen: false)
             .signup(_authData['email'], _authData['password']);
@@ -149,10 +181,12 @@ class _AuthCardState extends State<AuthCard>
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      _animationController.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _animationController.reverse();
     }
   }
 
@@ -210,20 +244,35 @@ class _AuthCardState extends State<AuthCard>
                     _authData['password'] = value;
                   },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    textInputAction: TextInputAction.done,
-                    validator: (value) {
-                      return value == _passwordController.text
-                          ? null
-                          : 'Passwords do not match';
-                    },
-                    onSaved: (value) {
-                      _authData['password'] = value;
-                    },
+                AnimatedContainer(
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  duration: Duration(
+                    milliseconds: 300,
+                  ),
+                  curve: Curves.easeIn,
+                  child: FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: TextFormField(
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        textInputAction: TextInputAction.done,
+                        validator: _authMode == AuthMode.Signup
+                            ? (value) {
+                                return value == _passwordController.text
+                                    ? null
+                                    : 'Passwords do not match';
+                              }
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 20.0),
                 _isLoading
                     ? Center(child: CircularProgressIndicator())
