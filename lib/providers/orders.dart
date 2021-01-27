@@ -43,7 +43,7 @@ class Orders with ChangeNotifier {
     });
     final url =
         'https://flutter-shop-app-6ecaa.firebaseio.com/orders/$userId.json?auth=$authToken';
-    debugPrint('$products');
+    // debugPrint('$products');
     try {
       final response = await http.post(
         url,
@@ -84,7 +84,7 @@ class Orders with ChangeNotifier {
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      if (extractedData['error'] != null) {
+      if (extractedData != null && extractedData['error'] != null) {
         throw HttpException(extractedData['error']);
       }
       if (extractedData != null) {

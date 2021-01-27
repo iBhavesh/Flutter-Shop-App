@@ -63,7 +63,7 @@ class Cart with ChangeNotifier {
       }
     } else {
       final url =
-          'https://flutter-shop-app-6ecaa.firebaseio.com/cart.json?auth=$authToken';
+          'https://flutter-shop-app-6ecaa.firebaseio.com/cart/$userId.json?auth=$authToken';
       try {
         final response = await http.post(
           url,

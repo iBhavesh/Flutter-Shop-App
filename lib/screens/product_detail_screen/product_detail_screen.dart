@@ -16,11 +16,11 @@ class ProductDetailScreen extends StatelessWidget {
     ).findById(productId);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          loadedProduct.title,
-        ),
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     loadedProduct.title,
+      //   ),
+      // ),
       body: DetailScreenBody(mediaQuery: mediaQuery, loadedProduct: loadedProduct),
     );
   }
