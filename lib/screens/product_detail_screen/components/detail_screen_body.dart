@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../providers/product.dart';
 
-import 'package:transparent_image/transparent_image.dart';
-
 class DetailScreenBody extends StatelessWidget {
   final Product loadedProduct;
   final MediaQueryData mediaQuery;
@@ -23,10 +21,13 @@ class DetailScreenBody extends StatelessWidget {
                     kToolbarHeight) *
                 0.4,
             width: double.infinity,
-            child: FadeInImage.memoryNetwork(
-              image: loadedProduct.imageUrl,
-              placeholder: kTransparentImage,
-              fit: BoxFit.cover,
+            child: Hero(
+              tag: loadedProduct.imageUrl,
+              child: FadeInImage.assetNetwork(
+                image: loadedProduct.imageUrl,
+                placeholder: 'assets/images/produt-placeholder.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           SizedBox(height: 10),

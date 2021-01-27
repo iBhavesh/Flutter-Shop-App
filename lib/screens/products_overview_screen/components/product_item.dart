@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 import '../../product_detail_screen/product_detail_screen.dart';
 import '../../../helpers.dart' show showSnackBar;
@@ -38,10 +37,13 @@ class ProductItem extends StatelessWidget {
               arguments: product.id,
             );
           },
-          child: FadeInImage.memoryNetwork(
-            image: product.imageUrl,
-            placeholder: kTransparentImage,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: product.imageUrl,
+            child: FadeInImage.assetNetwork(
+              image: product.imageUrl,
+              placeholder: 'assets/images/product-placeholder.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         footer: GridTileBar(

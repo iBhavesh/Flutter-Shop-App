@@ -129,22 +129,15 @@ class _AuthCardState extends State<AuthCard>
   }
 
   Future<void> _submitForm() async {
-    debugPrint("1");
-    debugPrint(_authMode.toString());
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
     setState(() {
       _isLoading = true;
     });
-    debugPrint("2");
     try {
-      debugPrint("3");
       if (_authMode == AuthMode.Login) {
-        debugPrint("4");
-    debugPrint("${_authData['email']},${_authData['password']}");
         await Provider.of<Auth>(context, listen: false)
             .login(_authData['email'], _authData['password']);
-        debugPrint("5");
       } else {
         await Provider.of<Auth>(context, listen: false)
             .signup(_authData['email'], _authData['password']);
