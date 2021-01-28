@@ -96,8 +96,8 @@ class Orders with ChangeNotifier {
                     'quantity': element['quantity'],
                   })
               .toList();
-          debugPrint('$products');
-          debugPrint('after');
+          // debugPrint('$products');
+          // debugPrint('after');
           _orders.insert(
               0,
               OrderItem(

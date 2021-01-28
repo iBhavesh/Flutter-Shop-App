@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import './cart_item.dart';
 import '../../../providers/cart.dart' show Cart;
 import '../../../providers/orders.dart';
-import '../../../helpers.dart';
+import '../../../helpers/helpers.dart';
 
 class CartBody extends StatefulWidget {
   const CartBody({

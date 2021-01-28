@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../helpers/custom_route.dart';
 import '../screens/orders_screen/orders_screen.dart';
 import '../screens/user_products_screen/user_products_screen.dart';
 import '../providers/auth.dart';
@@ -36,6 +37,9 @@ class AppDrawer extends StatelessWidget {
             handler: () {
               Navigator.of(context)
                   .pushReplacementNamed(UserProductsScreen.routeName);
+              // Navigator.of(context).pushReplacement(CustomRoute(
+              //   builder: (ctx) => UserProductsScreen(),
+              // ));
             },
           ),
           DrawerItem(

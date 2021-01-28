@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../product_detail_screen/product_detail_screen.dart';
-import '../../../helpers.dart' show showSnackBar;
+import '../../../helpers/helpers.dart' show showSnackBar;
 import '../../../providers/product.dart';
 import '../../../providers/cart.dart';
 import '../../../providers/auth.dart';

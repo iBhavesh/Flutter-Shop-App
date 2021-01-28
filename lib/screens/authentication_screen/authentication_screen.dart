@@ -1,8 +1,9 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/helpers.dart';
+import '../../helpers/helpers.dart';
 
 import '../../providers/auth.dart';
 import '../../models/http_exception.dart';
@@ -97,8 +98,8 @@ class _AuthCardState extends State<AuthCard>
   final _formKey = GlobalKey<FormState>();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
-    'email': '',
-    'password': '',
+    'email': !kReleaseMode ? 'admin@test.com' : '',
+    'password': !kReleaseMode ? '123456' : '',
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
@@ -109,6 +110,7 @@ class _AuthCardState extends State<AuthCard>
   @override
   void initState() {
     super.initState();
+    _passwordController.text = _authData['password'];
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(
