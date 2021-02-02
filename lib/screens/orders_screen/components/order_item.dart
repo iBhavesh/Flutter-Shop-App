@@ -19,6 +19,7 @@ class OrderItem extends StatefulWidget {
 
 class _OrderItemState extends State<OrderItem> {
   bool _expanded = false;
+
   @override
   Widget build(BuildContext context) {
     final products = Provider.of<Products>(context, listen: false);
